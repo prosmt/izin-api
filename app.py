@@ -1,16 +1,16 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from supabase import create_client
-
-# Supabase bilgilerini çekelim
 import os
+
+# Supabase bilgileri
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = Flask(__name__)
-CORS(app)  # <--- Burayı ekledim: Tüm dış istekler izinli
+CORS(app)  # CORS izinleri verildi
 
 @app.route('/')
 def home():
@@ -30,11 +30,12 @@ def sorgula():
             .select("*")\
             .eq('ad_soyad', ad_soyad)\
             .eq('tc_son3', tc_son3)\
-            .single()\
+            .limit(1)\
             .execute()
 
-        if response.data:
-            kalan_izin = response.data.get('kalan_izin_gunu', 0)
+        rows = response.data
+        if rows and len(rows) > 0:
+            kalan_izin = rows[0].get('kalan_izin_gunu', 0)
             return jsonify({"kalan_izin_gunu": kalan_izin})
         else:
             return jsonify({"error": "Kayıt bulunamadı."}), 404
